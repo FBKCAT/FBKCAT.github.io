@@ -191,6 +191,10 @@
       
         <p>在使用maven导入springboot 的依赖时Pulgines会出现红色的报错，Dependencies会有灰色的依赖冲突，网上查了许多方法但基本没有符合情况的，问了一下老师解决了。</p>
 <p>其原因在于idea maven的仓库的路径设置错误和Java Home的仓库路径设置错误。</p>
+<p>还有一个原因就是其依赖的父类没有导入</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;parent&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;1.5.8.RELEASE&lt;/version&gt;</span><br><span class="line">        &lt;relativePath/&gt;</span><br><span class="line">    &lt;/parent&gt;</span><br></pre></td></tr></table></figure>
+
+<p>准确的来说就是仓库路径的配置错误导致父类依赖的包没有下载进指定的仓库，使得子类报错。</p>
 
       
 
@@ -211,6 +215,17 @@
 	</div>
 
       
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/java//" class="article-tag-list-link color5">java</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
 
       
         <p class="article-more-link">
