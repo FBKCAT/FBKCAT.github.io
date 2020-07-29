@@ -724,7 +724,8 @@ body, button, input, select, textarea {
 
 body {
   overflow-y: hidden;
-  background: #eaeaea
+  background: #eaeaea;
+  background: #2E2E2E
 }
 
 #container, body, html {
