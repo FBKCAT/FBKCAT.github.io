@@ -8,16 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>RabbitMQ学习(其二) | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="描述">
+  <meta name="description" content="RabbitMQ的高级特性1.消息的可靠投递在使用RabbitMQ的时候，作为消息的发送方希望杜绝任何消丢失或者失败的场景。RabbitMQ为我们提供了两种方式来控制消息的投递可靠性模式。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RabbitMQ学习(其二)">
 <meta property="og:url" content="http://yoursite.com/2020/07/31/RabbitMQ%E5%AD%A6%E4%B9%A0-%E5%85%B6%E4%BA%8C/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="描述">
+<meta property="og:description" content="RabbitMQ的高级特性1.消息的可靠投递在使用RabbitMQ的时候，作为消息的发送方希望杜绝任何消丢失或者失败的场景。RabbitMQ为我们提供了两种方式来控制消息的投递可靠性模式。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-07-31T12:59:59.000Z">
-<meta property="article:modified_time" content="2020-07-31T12:59:59.189Z">
+<meta property="article:modified_time" content="2020-08-01T08:25:20.253Z">
 <meta property="article:author" content="随风-而动">
+<meta property="article:tag" content="学习">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -192,7 +193,46 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h4 id="RabbitMQ的高级特性"><a href="#RabbitMQ的高级特性" class="headerlink" title="RabbitMQ的高级特性"></a>RabbitMQ的高级特性</h4><h5 id="1-消息的可靠投递"><a href="#1-消息的可靠投递" class="headerlink" title="1.消息的可靠投递"></a>1.消息的可靠投递</h5><p>在使用RabbitMQ的时候，作为消息的发送方希望杜绝任何消丢失或者失败的场景。RabbitMQ为我们提供了两种方式来控制消息的投递可靠性模式。</p>
+<a id="more"></a>
+<ul>
+<li>confirm 确认模式</li>
+<li>return 回退模式</li>
+</ul>
+<p>producer —&gt; rabbitmq broker —&gt; exchange —&gt; queue —&gt; consumer</p>
+<ul>
+<li>消息从p到e返回一个confirmCallback</li>
+<li>消息从e到q投递失败返回一一个returnCallback</li>
+</ul>
+<h5 id="2-Consumer-Ack"><a href="#2-Consumer-Ack" class="headerlink" title="2.Consumer Ack"></a>2.Consumer Ack</h5><p>ack指 Acknowledge ，确认。 表示消费端收到消息后的确认方式。有三种确认方式：</p>
+<ul>
+<li>自动确认： acknowledge=” none</li>
+<li>手动确认： acknowledge=”manual”</li>
+<li>根据异常情况确认： acknowledge=”auto” auto”</li>
+</ul>
+<p>其中自动确认是指，当消息一旦被Consumer 接收到，则自动确认收到，并将相应 message 从 RabbitMQ 的消息缓存中移除。但是在实际业务处理中，很可能消息接收到，业务处理出现异常，那么该消息就会丢失。如果设置了手动确认方式，则需要在业务处理成功后，调channel.basicAck()basicAck()，手动签收，如果出现异常，则调用 channel.basicNack() 方法，让其自动重新发送消息。</p>
+<h5 id="3-消费端限流"><a href="#3-消费端限流" class="headerlink" title="3.消费端限流"></a>3.消费端限流</h5><p>配置prefetch属性设置消费段一次拉取多少信息。</p>
+<h5 id="4-TTL"><a href="#4-TTL" class="headerlink" title="4.TTL"></a>4.TTL</h5><ul>
+<li>TTL 全称 Time To Live （存活 时间 过期时间 ）。</li>
+<li>当消息到达存活时间后，还没有被消费，会被自动清除。</li>
+<li>RabbitMQ 可以对消息设置 过期时间 ，也可以对整个队列 Queue ）设置 过期时间 。</li>
+</ul>
+<h5 id="5-死信队列"><a href="#5-死信队列" class="headerlink" title="5.死信队列"></a>5.死信队列</h5><p>死信队列，英文缩写：DLX 。 Dead Letter Exchange （死信交换机），当消息成为 Dead message 后，可以被重新发送到另一个交换机，这个交换机就是 DLX 。<br>其本值就是普通的交换机被赋予死信交换机的属性，普通的消息被赋予死信的属性。</p>
+<p>   消息成为死信的三种情况：</p>
+<ol>
+<li>队列消息长度 到达限制</li>
+<li>消费者拒接消费消息，并且不 重回队列；</li>
+<li>原队列存在消息过期设置，消息到达超时时间未被消费；</li>
+</ol>
+<h4 id="6-延迟队列"><a href="#6-延迟队列" class="headerlink" title="6.延迟队列"></a>6.延迟队列</h4><p>延迟队列，即消息进入队列后不会立即被消费，只有到达指定时间后，才会被消费。<br>RabbitMQ没有提供延迟队列功能，但是可以使用 TTL + DLX 来实现延迟队列效果。</p>
+<h5 id="7-日志与监控"><a href="#7-日志与监控" class="headerlink" title="7.日志与监控"></a>7.日志与监控</h5><p>RabbitMQ默认日志存放路径： ：/var/log/rabbitmq/ xxx .log</p>
+<p>日志包含了：<br>RabbitMQ 的版本号、 Erlang 的版本号、 RabbitMQ 服务节点名称、 cookie 的 hash 值、<br>RabbitMQ 配置文件地址、内存限制、磁盘限制、默认账户 guest 的创建以及权限配置等等。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//rabbitmqctl 管理和监控</span></span><br><span class="line">查看队列</span><br><span class="line"># rabbitmqctl list_queues</span><br><span class="line">查看</span><br><span class="line">exchanges</span><br><span class="line"># rabbitmqctl list_exchanges</span><br><span class="line">查看用户</span><br><span class="line"># rabbitmqctl list_users</span><br><span class="line">查看连接</span><br><span class="line"># rabbitmqctl list_connections</span><br><span class="line">查看消费者信息</span><br><span class="line"># rabbitmqctl list_consumers</span><br><span class="line">查看环境变量</span><br><span class="line"># rabbitmqctl environment</span><br><span class="line">查看未被确认的队列</span><br><span class="line"># rabbitmqctl list_queues name messages_unacknowledged</span><br><span class="line">查看单个队列的内存使用</span><br><span class="line"># rabbitmqctl list_queues name memory</span><br><span class="line">查看准备就绪的队列</span><br><span class="line"># rabbitmqctl list_queues name messages_ready</span><br></pre></td></tr></table></figure>
+
+<h5 id="8-消息追踪"><a href="#8-消息追踪" class="headerlink" title="8.消息追踪"></a>8.消息追踪</h5><p>在使用任何消息中间件的过程中，难免会出现某条消息异常丢失的情况。对于<br>RabbitMQ 而言，可能是因为生产者或消费者与 RabbitMQ 断开了连接，而它们与 RabbitMQ 又采用了不同的确认机制也有可能是因为交换器与队列之间不同的转发策略；甚至是交换器并没有与任何队列进行绑定，生产者又不感知或者没有采取相应的措施；另外 RabbitMQ 本身的集群策略也可能导致消息的丢失。这个时候就需要有一个较好的机制跟踪记录消息的投递过程，以此协助开发和运维人员进行问题的定位。<br>在RabbitMQ 中可以使用 Firehose 和 rabbitmq_tracing 插件功能来实现消息追踪。</p>
+<h4 id="RabbitMQ应用问题"><a href="#RabbitMQ应用问题" class="headerlink" title="RabbitMQ应用问题"></a>RabbitMQ应用问题</h4><h5 id="消息可靠性保障"><a href="#消息可靠性保障" class="headerlink" title="消息可靠性保障"></a>消息可靠性保障</h5><p>消息补偿机制</p>
+<h5 id="消息幂等性保障"><a href="#消息幂等性保障" class="headerlink" title="消息幂等性保障"></a>消息幂等性保障</h5><p>幂等性指一次和多次请求某一个资源，对于资源本身应该具有同样的结果。也就是说，其任<br>意多次执行对资源本身所产生的影响均与一次执行的影响相同。<br>在MQ 中指，消费多条相同的消息，得到与消费该消息一次相同的结果。<br>乐观锁解决方案：指在对数据库进行修改的时候对要修改的数据的关键信息进行判断。</p>
+
       
 
       
@@ -200,7 +240,29 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">学习</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/java//" class="article-tag-list-link color5">java</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
 
       
 
@@ -293,7 +355,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    目录，不存在的…
+                    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#RabbitMQ的高级特性"><span class="toc-number">1.</span> <span class="toc-text">RabbitMQ的高级特性</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-消息的可靠投递"><span class="toc-number">1.1.</span> <span class="toc-text">1.消息的可靠投递</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-Consumer-Ack"><span class="toc-number">1.2.</span> <span class="toc-text">2.Consumer Ack</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-消费端限流"><span class="toc-number">1.3.</span> <span class="toc-text">3.消费端限流</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-TTL"><span class="toc-number">1.4.</span> <span class="toc-text">4.TTL</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-死信队列"><span class="toc-number">1.5.</span> <span class="toc-text">5.死信队列</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-延迟队列"><span class="toc-number">2.</span> <span class="toc-text">6.延迟队列</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#7-日志与监控"><span class="toc-number">2.1.</span> <span class="toc-text">7.日志与监控</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#8-消息追踪"><span class="toc-number">2.2.</span> <span class="toc-text">8.消息追踪</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#RabbitMQ应用问题"><span class="toc-number">3.</span> <span class="toc-text">RabbitMQ应用问题</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#消息可靠性保障"><span class="toc-number">3.1.</span> <span class="toc-text">消息可靠性保障</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#消息幂等性保障"><span class="toc-number">3.2.</span> <span class="toc-text">消息幂等性保障</span></a></li></ol></li></ol>
                     </div>
                 </span>
             </div>
@@ -406,15 +468,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">学习</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">面试题</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">bugs</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">学习</a>
               </li>
             
             <div class="clearfix"></div>
